@@ -98,7 +98,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Function to encode the image to base64
+# Función para codificar la imagen a base64
 def encode_image(image_file):
     return base64.b64encode(image_file.getvalue()).decode("utf-8")
 
@@ -147,14 +147,10 @@ if analyze_button:
     else:
         try:
             with st.spinner("🌌 Escaneando matriz de píxeles..."):
-                # Inicializar cliente OpenAI
                 client = OpenAI(api_key=api_key)
-                
-                # Codificar imagen
                 base64_image = encode_image(uploaded_file)
                 
                 prompt_text = "Describe detalladamente lo que ves en esta imagen en español."
-                
                 if show_details and additional_details:
                     prompt_text = f"Responde a la siguiente consulta sobre la imagen en español:\n{additional_details}"
 
@@ -173,6 +169,26 @@ if analyze_button:
                     }
                 ]
 
-                # Stream de la respuesta
                 full_response = ""
-                message_placeholder = st
+                message_placeholder = st.empty()
+                
+                for completion in client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=messages,
+                    max_tokens=1200,
+                    stream=True
+                ):
+                    if completion.choices[0].delta.content is not None:
+                        full_response += completion.choices[0].delta.content
+                        message_placeholder.markdown(
+                            f'<div class="stAlert">{full_response}▌</div>', 
+                            unsafe_allow_html=True
+                        )
+                
+                message_placeholder.markdown(
+                    f'<div class="stAlert"><strong>🤖 Análisis Neón Completo:</strong><br><br>{full_response}</div>', 
+                    unsafe_allow_html=True
+                )
+
+        except Exception as e:
+            st.error(f"❌ Ocurrió un error al procesar la solicitud: {e}")
