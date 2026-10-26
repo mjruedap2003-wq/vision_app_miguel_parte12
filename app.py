@@ -1,6 +1,8 @@
 import os
 import base64
+from collections import Counter
 import streamlit as st
+from PIL import Image
 from openai import OpenAI
 
 # 1. Configuración de página
@@ -30,20 +32,7 @@ st.markdown("""
         text-align: center;
         color: #00F0FF;
         text-shadow: 0 0 10px #00F0FF, 0 0 20px #00F0FF, 0 0 40px #0077FF;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Contenedor del GIF animado con marco neón */
-    .gif-container {
-        display: flex;
-        justify-content: center;
         margin-bottom: 1.5rem;
-    }
-    
-    .gif-container img {
-        border-radius: 16px;
-        border: 2px solid #00F0FF;
-        box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
     }
 
     /* Tarjetas y contenedores con bordes Neón */
@@ -88,12 +77,26 @@ st.markdown("""
         color: #E2E8F0 !important;
     }
 
-    /* Cajas de respuesta y errores */
+    /* Cajas de respuesta */
     .stAlert {
         background-color: #181E2A !important;
         border: 1px solid #00F0FF !important;
         color: #00F0FF !important;
         box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
+    }
+
+    /* Bloques visuales de colores */
+    .color-card {
+        height: 60px;
+        border-radius: 8px;
+        border: 1px solid #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #FFF;
+        text-shadow: 0 0 5px #000;
+        margin-bottom: 5px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -102,15 +105,36 @@ st.markdown("""
 def encode_image(image_file):
     return base64.b64encode(image_file.getvalue()).decode("utf-8")
 
+# Función útil: Extraer paleta de colores dominantes (HEX)
+def extract_dominant_colors(image_file, num_colors=5):
+    img = Image.open(image_file).convert('RGB')
+    # Redimensionar para acelerar el procesamiento de píxeles
+    img = img.resize((150, 150))
+    pixels = list(img.getdata())
+    
+    # Obtener los colores más comunes
+    counts = Counter(pixels).most_common(num_colors)
+    
+    hex_colors = []
+    total_pixels = 150 * 150
+    for (r, g, b), count in counts:
+        hex_code = f"#{r:02x}{g:02x}{b:02x}".upper()
+        percentage = round((count / total_pixels) * 100, 1)
+        hex_colors.append((hex_code, percentage, (r, g, b)))
+        
+    return hex_colors
+
 # Encabezado principal
 st.markdown('<h1 class="neon-title">👁️ NEON VISION: ANALYZER 🤖</h1>', unsafe_allow_html=True)
 
-# GIF Animado de Perrito Neón / Divertido
-st.markdown("""
-    <div class="gif-container">
-        <img src="https://media.giphy.com/media/m3864rB22UYQDBS25X/giphy.gif" width="230">
-    </div>
-""", unsafe_allow_html=True)
+# Opcional: Cargar banner desde GitHub si existe
+try:
+    banner_image = Image.open('Gus_imagen.png')
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image(banner_image, use_container_width=True)
+except Exception:
+    pass
 
 # Input para la API Key de OpenAI o recuperación desde Secrets
 secret_key = st.secrets.get("OPENAI_API_KEY", "")
@@ -118,12 +142,29 @@ ke = st.text_input('🔑 Ingresa tu Clave de OpenAI', value=secret_key, type="pa
 
 api_key = ke if ke else secret_key
 
-# Cargar la imagen
+# Cargar la imagen del usuario para analizar
 uploaded_file = st.file_uploader("📂 Sube una imagen para analizar", type=["jpg", "png", "jpeg"])
 
 if uploaded_file:
     with st.expander("🖼️ Vista Previa de la Imagen", expanded=True):
         st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
+
+    # 🎨 FUNCIÓN ÚTIL: Analizador de Colores Dominantes
+    st.divider()
+    st.markdown("### 🎨 Paleta de Colores Dominantes")
+    try:
+        dominant_colors = extract_dominant_colors(uploaded_file, num_colors=5)
+        c_cols = st.columns(len(dominant_colors))
+        
+        for idx, (hex_code, pct, rgb) in enumerate(dominant_colors):
+            with c_cols[idx]:
+                st.markdown(
+                    f'<div class="color-card" style="background-color: {hex_code};">{hex_code}</div>', 
+                    unsafe_allow_html=True
+                )
+                st.caption(f"**{pct}%** del total")
+    except Exception as e:
+        st.warning(f"No se pudieron extraer los colores: {e}")
 
 # Toggle para detalles adicionales
 show_details = st.toggle("💬 ¿Quieres hacer una pregunta específica sobre la imagen?", value=False)
@@ -132,13 +173,13 @@ additional_details = ""
 if show_details:
     additional_details = st.text_area(
         "Escribe tu pregunta o contexto aquí:",
-        placeholder="Ej: ¿Qué ropa lleva puesta la persona? / ¿Qué texto dice el cartel?"
+        placeholder="Ej: ¿Qué ropa lleva puesta la persona? / ¿Qué composición o paleta sugiere este arte?"
     )
 
 # Botón de análisis
-analyze_button = st.button("⚡ ANALIZAR IMAGEN ⚡", type="primary")
+analyze_button = st.button("⚡ ANALIZAR IMAGEN CON IA ⚡", type="primary")
 
-# Procesamiento
+# Procesamiento con OpenAI
 if analyze_button:
     if not uploaded_file:
         st.warning("⚠️ Por favor, sube una imagen primero.")
@@ -146,11 +187,11 @@ if analyze_button:
         st.warning("⚠️ Ingresa tu API Key de OpenAI para continuar.")
     else:
         try:
-            with st.spinner("🌌 Escaneando matriz de píxeles..."):
+            with st.spinner("🌌 Escaneando matriz de píxeles y consultando a la IA..."):
                 client = OpenAI(api_key=api_key)
                 base64_image = encode_image(uploaded_file)
                 
-                prompt_text = "Describe detalladamente lo que ves en esta imagen en español."
+                prompt_text = "Describe detalladamente lo que ves en esta imagen en español. Incluye detalles visuales, estilo y sujetos."
                 if show_details and additional_details:
                     prompt_text = f"Responde a la siguiente consulta sobre la imagen en español:\n{additional_details}"
 
