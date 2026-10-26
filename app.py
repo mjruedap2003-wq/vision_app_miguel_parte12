@@ -30,7 +30,20 @@ st.markdown("""
         text-align: center;
         color: #00F0FF;
         text-shadow: 0 0 10px #00F0FF, 0 0 20px #00F0FF, 0 0 40px #0077FF;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Contenedor del GIF animado con marco neón */
+    .gif-container {
+        display: flex;
+        justify-content: center;
         margin-bottom: 1.5rem;
+    }
+    
+    .gif-container img {
+        border-radius: 16px;
+        border: 2px solid #00F0FF;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
     }
 
     /* Tarjetas y contenedores con bordes Neón */
@@ -91,6 +104,13 @@ def encode_image(image_file):
 
 # Encabezado principal
 st.markdown('<h1 class="neon-title">👁️ NEON VISION: ANALYZER 🤖</h1>', unsafe_allow_html=True)
+
+# GIF Animado de Perrito Neón / Divertido
+st.markdown("""
+    <div class="gif-container">
+        <img src="https://media.giphy.com/media/m3864rB22UYQDBS25X/giphy.gif" width="230">
+    </div>
+""", unsafe_allow_html=True)
 
 # Input para la API Key de OpenAI o recuperación desde Secrets
 secret_key = st.secrets.get("OPENAI_API_KEY", "")
@@ -155,25 +175,4 @@ if analyze_button:
 
                 # Stream de la respuesta
                 full_response = ""
-                message_placeholder = st.empty()
-                
-                for completion in client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages,
-                    max_tokens=1200,
-                    stream=True
-                ):
-                    if completion.choices[0].delta.content is not None:
-                        full_response += completion.choices[0].delta.content
-                        message_placeholder.markdown(
-                            f'<div class="stAlert">{full_response}▌</div>', 
-                            unsafe_allow_html=True
-                        )
-                
-                message_placeholder.markdown(
-                    f'<div class="stAlert"><strong>🤖 Análisis Neón Completo:</strong><br><br>{full_response}</div>', 
-                    unsafe_allow_html=True
-                )
-
-        except Exception as e:
-            st.error(f"❌ Ocurrió un error al procesar la solicitud: {e}")
+                message_placeholder = st
