@@ -138,7 +138,7 @@ except Exception:
 
 # Input para la API Key de OpenAI o recuperación desde Secrets
 secret_key = st.secrets.get("OPENAI_API_KEY", "")
-ke = st.text_input('🔑 Ingresa tu Clave de OpenAI, rece pa' que funcione papito', value=secret_key, type="password", help="Pega aquí tu sk-...")
+ke = st.text_input('🔑 Ingresa tu Clave de OpenAI, rece pa que funcione papito', value=secret_key, type="password", help="Pega aquí tu sk-...")
 
 api_key = ke if ke else secret_key
 
