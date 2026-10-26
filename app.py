@@ -125,7 +125,7 @@ def extract_dominant_colors(image_file, num_colors=5):
     return hex_colors
 
 # Encabezado principal
-st.markdown('<h1 class="neon-title">👁️ NEON VISION: ANALYZER 🤖</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="neon-title">👁️ NEON VISION: ANAL-YZER 🤖</h1>', unsafe_allow_html=True)
 
 # Opcional: Cargar banner desde GitHub si existe
 try:
@@ -138,12 +138,12 @@ except Exception:
 
 # Input para la API Key de OpenAI o recuperación desde Secrets
 secret_key = st.secrets.get("OPENAI_API_KEY", "")
-ke = st.text_input('🔑 Ingresa tu Clave de OpenAI', value=secret_key, type="password", help="Pega aquí tu sk-...")
+ke = st.text_input('🔑 Ingresa tu Clave de OpenAI, rece pa' que funcione papito', value=secret_key, type="password", help="Pega aquí tu sk-...")
 
 api_key = ke if ke else secret_key
 
 # Cargar la imagen del usuario para analizar
-uploaded_file = st.file_uploader("📂 Sube una imagen para analizar", type=["jpg", "png", "jpeg"])
+uploaded_file = st.file_uploader("📂 Sube una imagen para analizar, pilas, que sea algo para toda la familia...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file:
     with st.expander("🖼️ Vista Previa de la Imagen", expanded=True):
