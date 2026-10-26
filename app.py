@@ -129,7 +129,7 @@ st.markdown('<h1 class="neon-title">👁️ NEON VISION: ANALYZER 🤖</h1>', un
 
 # Opcional: Cargar banner desde GitHub si existe
 try:
-    banner_image = Image.open('Gus_imagen.png')
+    banner_image = Image.open('Gustavito.png')
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.image(banner_image, use_container_width=True)
